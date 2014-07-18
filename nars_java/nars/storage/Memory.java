@@ -406,14 +406,14 @@ public class Memory {
      * @param newBudget The budget value in task
      * @param revisible Whether the sentence is revisible
      */
-    public void doublePremiseTask(Term newContent, TruthValue newTruth, BudgetValue newBudget, boolean revisible) {
-        if (newContent != null) {
-            Sentence taskSentence = currentTask.getSentence();
-            Sentence newSentence = new Sentence(newContent, taskSentence.getPunctuation(), newTruth, newStamp, revisible);
-            Task newTask = new Task(newSentence, newBudget, currentTask, currentBelief);
-            derivedTask(newTask, false, false);
-        }
-    }
+//    public void doublePremiseTask(Term newContent, TruthValue newTruth, BudgetValue newBudget) {
+//        if (newContent != null) {
+//            Sentence taskSentence = currentTask.getSentence();
+//            Sentence newSentence = new Sentence(newContent, taskSentence.getPunctuation(), newTruth, newStamp);
+//            Task newTask = new Task(newSentence, newBudget, currentTask, currentBelief);
+//            derivedTask(newTask, false, false);
+//        }
+//    }
 
     /**
      * Shared final operations by all single-premise rules, called in
@@ -447,8 +447,7 @@ public class Memory {
         } else {    // to answer a question with negation in NAL-5 --- move to activated task?
             newStamp = new Stamp(currentBelief.getStamp(), getTime());
         }
-
-        Sentence newSentence = new Sentence(newContent, punctuation, newTruth, newStamp, taskSentence.getRevisible());
+        Sentence newSentence = new Sentence(newContent, punctuation, newTruth, newStamp);
         Task newTask = new Task(newSentence, newBudget, currentTask, null);
         derivedTask(newTask, false, true);
     }

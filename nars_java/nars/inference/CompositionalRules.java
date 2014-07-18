@@ -382,7 +382,7 @@ public final class CompositionalRules {
         content = Conjunction.make(state1, state2, memory);
         truth = TruthFunctions.intersection(truthT, truthB);
         budget = BudgetFunctions.compoundForward(truth, content, memory);
-        memory.doublePremiseTask(content, truth, budget, false);
+        memory.doublePremiseTask(content, truth, budget);
     }
 
     /**
@@ -424,7 +424,7 @@ public final class CompositionalRules {
         content.applySubstitute(substitute);
         TruthValue truth = TruthFunctions.intersection(taskSentence.getTruth(), belief.getTruth());
         BudgetValue budget = BudgetFunctions.forward(truth, memory);
-        memory.doublePremiseTask(content, truth, budget, false);
+        memory.doublePremiseTask(content, truth, budget);
         substitute.clear();
         substitute.put(commonTerm1, new Variable("$varInd1"));
         if (commonTerm2 != null) {

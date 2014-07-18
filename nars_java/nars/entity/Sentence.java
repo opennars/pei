@@ -21,7 +21,9 @@
 package nars.entity;
 
 import nars.io.Symbols;
+import nars.language.Conjunction;
 import nars.language.Term;
+import nars.language.Variable;
 
 /**
  * A Sentence is an abstract class, mainly containing a Term, a TruthValue, and
@@ -49,7 +51,6 @@ public class Sentence implements Cloneable {
      */
     final public Stamp stamp;
 
-
     /**
      * Whether the sentence can be revised
      */
@@ -68,28 +69,16 @@ public class Sentence implements Cloneable {
      * base
      */
     public Sentence(Term content, char punctuation, TruthValue truth, Stamp stamp) {
-        this(content, punctuation, truth, stamp, true);
-    }
-
-    /**
-     * Create a Sentence with the given fields
-     *
-     * @param content The Term that forms the content of the sentence
-     * @param punctuation The punctuation indicating the type of the sentence
-     * @param truth The truth value of the sentence, null for question
-     * @param stamp The stamp of the sentence indicating its derivation time and
-     * base
-     * @param revisible Whether the sentence can be revised
-     */
-    public Sentence(Term content, char punctuation, TruthValue truth, Stamp stamp, boolean revisible) {
         this.content = content;
         this.content.renameVariables();
         this.punctuation = punctuation;
         this.truth = truth;
         this.stamp = stamp;
-        this.revisible = revisible;
-  
-                
+        if ((content instanceof Conjunction) && Variable.containVarDep(content.getName())) {
+            this.revisible = false;
+        } else {
+            this.revisible = true;
+        }
     }
 
     /**
@@ -145,7 +134,7 @@ public class Sentence implements Cloneable {
         if (truth == null) {
             return new Sentence((Term) content.clone(), punctuation, null, (Stamp) stamp.clone());
         }
-        return new Sentence((Term) content.clone(), punctuation, new TruthValue(truth), (Stamp) stamp.clone(), revisible);
+        return new Sentence((Term) content.clone(), punctuation, new TruthValue(truth), (Stamp) stamp.clone());
     }
 
     /**
@@ -174,7 +163,6 @@ public class Sentence implements Cloneable {
     public Term cloneContent() {
         return (Term) content.clone();
     }
-
 
     /**
      * Get the truth value of the sentence
@@ -251,22 +239,66 @@ public class Sentence implements Cloneable {
     public String toKey() {
         if (key == null) {
             final String contentToString = content.toString();
-            final String truthString = truth!=null ? truth.toStringBrief() : null;
+            final String occurrenceTimeString = stamp.getOccurrenceTimeString();
+            final String truthString = truth != null ? truth.toStringBrief() : null;
             //final String stampString = stamp.toString();
 
             int stringLength = contentToString.length() + 1 + 1/* + stampString.length()*/;
-            if (truth!=null)
-                stringLength += truthString.length();
+            if (truth != null) {
+                stringLength += occurrenceTimeString.length() + truthString.length();
+            }
 
             final StringBuilder k = new StringBuilder(stringLength).append(contentToString)
-                .append(punctuation).append(" ");
+                    .append(punctuation).append(" ");
+            if (occurrenceTimeString.length() > 0) {
+                k.append(occurrenceTimeString);
+            }
             if (truth != null) {
                 k.append(truthString);
             }
 
-            key = k.toString();        
-            
+            key = k.toString();
+
         }
         return key;
     }
+
+    // need a separate display method, where the occurenceTime is converted to tense,
+    // according to the current time
+    /**
+     * Get a String representation of the sentence for display purpose
+     *
+     * @param currentTime Current time on the internal clock
+     * @return The String
+     */
+    public String display(long currentTime) {
+        final String contentToString = content.toString();
+        final long occurenceTime = stamp.getOccurrenceTime();
+        String tenseString = "";
+        if (occurenceTime != Stamp.ETERNAL) {
+            long timeDiff = occurenceTime - currentTime;
+            if (timeDiff > 0) {
+                tenseString = Symbols.TENSE_FUTURE;
+            } else if (timeDiff > 0) {
+                tenseString = Symbols.TENSE_PAST;
+            } else {
+                tenseString = Symbols.TENSE_PRESENT;
+            }
+        }
+        final String truthString = truth != null ? truth.toStringBrief() : null;
+        //final String stampString = stamp.toString();
+
+        int stringLength = contentToString.length() + tenseString.length() + 1 + 1/* + stampString.length()*/;
+        if (truth != null) {
+            stringLength += truthString.length();
+        }
+
+        final StringBuilder buffer = new StringBuilder(stringLength).append(contentToString)
+                .append(punctuation).append(" ").append(tenseString);
+        if (truth != null) {
+            buffer.append(truthString);
+        }
+        return buffer.toString();
+    }
+
 }
